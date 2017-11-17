@@ -36,9 +36,9 @@ static uint8_t rx_mode = RX_MODE_IDLE;
 
 static uint16_t rx_manBits = 0; //the received manchester 32 bits
 static uint8_t rx_numMB = 0; //the number of received manchester bits
-static uint8_t rx_curByte = 0;
+static uint16_t rx_curByte = 0;
 
-static uint8_t rx_maxBytes = 2;
+static uint16_t rx_maxBytes = 2;
 static uint8_t rx_default_data[2];
 static uint8_t* rx_data = rx_default_data;
 
@@ -138,7 +138,7 @@ the transmit level.
 The receiver waits until we have at least 10 10's and then a start pulse 01.
 The receiver is then operating correctly and we have locked onto the transmission.
 */
-void Manchester::transmitArray(uint8_t numBytes, uint8_t *data)
+void Manchester::transmitArray(uint16_t numBytes, uint8_t *data)
 {
 
 #if SYNC_BIT_VALUE
@@ -156,7 +156,7 @@ void Manchester::transmitArray(uint8_t numBytes, uint8_t *data)
 #endif
  
   // Send the user data
-  for (uint8_t i = 0; i < numBytes; i++)
+  for (uint16_t i = 0; i < numBytes; i++)
   {
     uint16_t mask = 0x01; //mask to send bits
     uint8_t d = data[i] ^ DECOUPLING_MASK;
@@ -234,7 +234,7 @@ uint16_t Manchester::encodeMessage(uint8_t id, uint8_t data)
   return m;
 }
 
-void Manchester::beginReceiveArray(uint8_t maxBytes, uint8_t *data)
+void Manchester::beginReceiveArray(uint16_t maxBytes, uint8_t *data)
 {
   ::MANRX_BeginReceiveBytes(maxBytes, data);
 }
@@ -450,7 +450,7 @@ void MANRX_BeginReceive(void)
   rx_mode = RX_MODE_PRE;
 }
 
-void MANRX_BeginReceiveBytes(uint8_t maxBytes, uint8_t *data)
+void MANRX_BeginReceiveBytes(uint16_t maxBytes, uint8_t *data)
 {
   rx_maxBytes = maxBytes;
   rx_data = data;
@@ -480,7 +480,7 @@ void MANRX_SetRxPin(uint8_t pin)
 }//end of set transmit pin
 
 void AddManBit(uint16_t *manBits, uint8_t *numMB,
-               uint8_t *curByte, uint8_t *data,
+               uint16_t *curByte, uint8_t *data,
                uint8_t bit)
 {
   *manBits <<= 1;
@@ -502,14 +502,6 @@ void AddManBit(uint16_t *manBits, uint8_t *numMB,
     data[*curByte] = newData ^ DECOUPLING_MASK;
     (*curByte)++;
 
-    // added by caoxp @ https://github.com/caoxp
-    // compatible with unfixed-length data, with the data length defined by the first byte.
-	// at a maximum of 255 total data length.
-    if( (*curByte) == 1)
-    {
-      rx_maxBytes = data[0];
-    }
-    
     *numMB = 0;
   }
 }
